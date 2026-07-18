@@ -1,0 +1,428 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AMD 股票跟踪及分析系统</title>
+  <style>
+    :root {
+      --ink: #172026;
+      --muted: #5e6a72;
+      --line: #d9e1e5;
+      --bg: #f4f7f8;
+      --panel: #fff;
+      --brand: #194f5d;
+      --accent: #cf6b3c;
+      --good: #267452;
+      --warn: #ad6817;
+      --bad: #a33b3b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    header {
+      background: var(--brand);
+      color: #fff;
+      padding: 24px 30px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 8px 0 0;
+      color: rgba(255,255,255,.78);
+      font-size: 14px;
+    }
+    main {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 22px 28px 34px;
+    }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 220px 220px minmax(260px, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    select, input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card, section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .card {
+      padding: 14px 16px;
+    }
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .value {
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 7px;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 390px;
+      gap: 16px;
+      align-items: start;
+    }
+    .stack {
+      display: grid;
+      gap: 16px;
+    }
+    section {
+      overflow: hidden;
+    }
+    section h2 {
+      margin: 0;
+      padding: 14px 16px;
+      font-size: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #eef4f5;
+      color: #2b3a42;
+      font-weight: 700;
+    }
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      background: #e8f3ee;
+      color: var(--good);
+    }
+    .pill.warn { background: #fff1db; color: var(--warn); }
+    .pill.bad { background: #ffe8e8; color: var(--bad); }
+    .analysis {
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .analysis-item {
+      border-left: 4px solid var(--line);
+      padding: 2px 0 2px 12px;
+    }
+    .analysis-item strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+    .bars {
+      padding: 12px 16px 18px;
+      display: grid;
+      gap: 12px;
+    }
+    .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .bar {
+      height: 10px;
+      background: #e8eef1;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .bar span {
+      display: block;
+      height: 100%;
+      background: var(--accent);
+    }
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 12px 16px 16px;
+    }
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding: 14px 16px 16px;
+    }
+    .side-news {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .news-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+      background: #fbfdfe;
+    }
+    .news-card a {
+      color: var(--brand);
+      font-weight: 700;
+      text-decoration: none;
+    }
+    .news-card a:hover { text-decoration: underline; }
+    .meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    footer {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 0 28px 28px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 1050px) {
+      .cards { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+      .layout, .toolbar { grid-template-columns: 1fr; }
+      .news-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AMD 股票跟踪及分析系统</h1>
+    <p>每日跟踪行情、新闻、财报事件、估值压力和 AI/数据中心基本面。当前为分析看板，不构成投资建议。</p>
+  </header>
+  <main>
+    <div class="toolbar">
+      <select id="viewFilter">
+        <option value="all">全部信息</option>
+        <option value="price">行情与技术面</option>
+        <option value="fundamental">基本面</option>
+        <option value="news">新闻与事件</option>
+        <option value="risk">风险</option>
+      </select>
+      <select id="horizonFilter">
+        <option value="daily">每日跟踪</option>
+        <option value="weekly">周度复盘</option>
+        <option value="earnings">财报前后</option>
+      </select>
+      <input id="search" placeholder="搜索：AI、数据中心、财报、估值、风险" />
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="layout">
+      <div class="stack">
+        <section data-type="price">
+          <h2>每日行情跟踪</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>项目</th>
+                <th>当前设置</th>
+                <th>跟踪意义</th>
+                <th>状态</th>
+              </tr>
+            </thead>
+            <tbody id="priceTracking"></tbody>
+          </table>
+        </section>
+
+        <section data-type="fundamental">
+          <h2>基本面与财报监控</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>指标</th>
+                <th>最近信息</th>
+                <th>解读</th>
+              </tr>
+            </thead>
+            <tbody id="fundamentals"></tbody>
+          </table>
+        </section>
+
+        <section data-type="news">
+          <h2>最新财经新闻</h2>
+          <div class="news-grid" id="marketNews"></div>
+        </section>
+
+        <section data-type="news">
+          <h2>AMD 相关新闻</h2>
+          <div class="news-grid" id="amdNews"></div>
+        </section>
+
+        <section data-type="news">
+          <h2>近期事件与日历</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>事件</th>
+                <th>对 AMD 的影响</th>
+              </tr>
+            </thead>
+            <tbody id="events"></tbody>
+          </table>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section data-type="news">
+          <h2>AMD 最新新闻</h2>
+          <div class="news-grid side-news" id="sideAmdNews"></div>
+        </section>
+        <section data-type="news">
+          <h2>华尔街最新财经新闻</h2>
+          <div class="news-grid side-news" id="sideWallStreetNews"></div>
+        </section>
+        <section data-type="risk">
+          <h2>风险清单</h2>
+          <table>
+            <thead><tr><th>风险</th><th>观察点</th></tr></thead>
+            <tbody id="risks"></tbody>
+          </table>
+        </section>
+      </div>
+    </div>
+  </main>
+  <footer>
+    <span id="dataStatus">数据加载中</span>
+  </footer>
+
+  <script src="data/amd_dashboard_data.js"></script>
+  <script>
+    const dashboard = window.AMD_DASHBOARD_DATA || {};
+    const events = dashboard.events || [];
+    const marketNews = dashboard.marketNews || [];
+    const amdNews = dashboard.amdNews || [];
+    const priceTracking = dashboard.priceTracking || [];
+    const fundamentals = dashboard.fundamentals || [];
+    const cards = dashboard.cards || [];
+    const risks = dashboard.risks || [];
+    const cardsBox = document.querySelector("#cards");
+    const priceTrackingBody = document.querySelector("#priceTracking");
+    const fundamentalsBody = document.querySelector("#fundamentals");
+    const eventBody = document.querySelector("#events");
+    const marketNewsBox = document.querySelector("#marketNews");
+    const amdNewsBox = document.querySelector("#amdNews");
+    const sideAmdNewsBox = document.querySelector("#sideAmdNews");
+    const sideWallStreetNewsBox = document.querySelector("#sideWallStreetNews");
+    const risksBody = document.querySelector("#risks");
+    const dataStatus = document.querySelector("#dataStatus");
+    const viewFilter = document.querySelector("#viewFilter");
+    const horizonFilter = document.querySelector("#horizonFilter");
+    const search = document.querySelector("#search");
+
+    function render() {
+      const type = viewFilter.value;
+      const q = search.value.trim().toLowerCase();
+      document.querySelectorAll("[data-type]").forEach(section => {
+        const sectionType = section.getAttribute("data-type");
+        section.style.display = type === "all" || type === sectionType ? "" : "none";
+      });
+      cardsBox.innerHTML = cards
+        .map(card => `<div class="card"><div class="label">${escapeHTML(card.label)}</div><div class="value">${escapeHTML(card.value)}</div><div class="sub">${escapeHTML(card.sub)}</div></div>`)
+        .join("");
+      priceTrackingBody.innerHTML = priceTracking
+        .filter(row => !q || row.join(" ").toLowerCase().includes(q))
+        .map(row => `<tr><td>${escapeHTML(row[0])}</td><td>${escapeHTML(row[1])}</td><td>${escapeHTML(row[2])}</td><td>${renderPill(row[3])}</td></tr>`)
+        .join("") || `<tr><td colspan="4">没有匹配行情项目</td></tr>`;
+      fundamentalsBody.innerHTML = fundamentals
+        .filter(row => !q || row.join(" ").toLowerCase().includes(q))
+        .map(row => `<tr><td>${escapeHTML(row[0])}</td><td>${escapeHTML(row[1])}</td><td>${escapeHTML(row[2])}</td></tr>`)
+        .join("") || `<tr><td colspan="3">没有匹配基本面指标</td></tr>`;
+      eventBody.innerHTML = events
+        .filter(row => !q || row.join(" ").toLowerCase().includes(q))
+        .map(row => `<tr><td>${escapeHTML(row[0])}</td><td>${escapeHTML(row[1])}</td><td>${escapeHTML(row[2])}</td></tr>`)
+        .join("") || `<tr><td colspan="3">没有匹配事件</td></tr>`;
+      marketNewsBox.innerHTML = renderNews(marketNews, q);
+      amdNewsBox.innerHTML = renderNews(amdNews, q);
+      sideAmdNewsBox.innerHTML = renderNews(amdNews.slice(0, 4), q);
+      sideWallStreetNewsBox.innerHTML = renderNews(marketNews.slice(0, 4), q);
+      risksBody.innerHTML = risks
+        .filter(row => !q || row.join(" ").toLowerCase().includes(q))
+        .map(row => `<tr><td>${escapeHTML(row[0])}</td><td>${escapeHTML(row[1])}</td></tr>`)
+        .join("") || `<tr><td colspan="2">没有匹配风险</td></tr>`;
+      dataStatus.textContent = `数据状态：${dashboard.dataStatus || "待更新"}。最近生成：${formatGeneratedAt(dashboard.generatedAt)}。`;
+    }
+
+    function renderNews(items, q) {
+      return items
+        .filter(item => !q || [item.date, item.source, item.title, item.summary, item.impact].join(" ").toLowerCase().includes(q))
+        .map(item => `
+          <article class="news-card">
+            <div class="meta">${escapeHTML(item.date)} · ${escapeHTML(item.source)} · ${escapeHTML(item.impact)}</div>
+            <a href="${escapeAttribute(item.url)}" target="_blank" rel="noopener noreferrer">${escapeHTML(item.title)}</a>
+            <div>${escapeHTML(item.summary)}</div>
+          </article>
+        `)
+        .join("") || `<div class="note">没有匹配新闻</div>`;
+    }
+
+    function renderPill(value) {
+      const text = String(value || "");
+      const cls = text.includes("待") ? "warn" : text.includes("风险") ? "bad" : "";
+      return `<span class="pill ${cls}">${escapeHTML(text)}</span>`;
+    }
+
+    function formatGeneratedAt(value) {
+      if (!value) return "未知";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return value;
+      return date.toLocaleString("zh-CN", { hour12: false });
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[char]));
+    }
+
+    function escapeAttribute(value) {
+      const text = String(value || "#");
+      if (!/^https?:\/\//.test(text) && text !== "#") return "#";
+      return escapeHTML(text);
+    }
+
+    viewFilter.addEventListener("change", render);
+    horizonFilter.addEventListener("change", render);
+    search.addEventListener("input", render);
+    render();
+  </script>
+</body>
+</html>
